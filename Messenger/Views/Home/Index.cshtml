@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Messenger.Models.Message>
+
+@{
+	ViewData["Title"] = "Home Page";
+	var userName = User.Identity.Name;
+	var fullName = ViewBag.CurrentUserName;
+	var userId = ViewBag.UserId;
+	var messageId = ViewBag.MessageId;
+}
+
+<div class="jumbotron bg-light">
+	<h2 class="text-center text-primary main-title">
+		&nbsp; Web messenger
+	</h2>
+
+	<div class="row">
+		<div class="col-md-12 main-container" id="chat" onload="updateChat()">
+			@if (Model != null)
+			{
+				@foreach (var message in Model.OrderBy(m => m.SendTime))
+				{
+					string containerClass, timePosition, textAlign, contcolor, offset;
+					if (userId == message.UserId)
+					{
+						containerClass = "container darker";
+						timePosition = "time-right text-light";
+						textAlign = "text-right text-white";
+						contcolor = "bg-primary";
+						offset = "col-md-6 offset-md-6";
+					}
+					else
+					{
+						containerClass = "container";
+						timePosition = "time-left";
+						textAlign = "text-left";
+						contcolor = "bg-light";
+						offset = "col-md-6 offset-md-6 align-left";
+					}
+
+					<div class="row" id="@message.Id">
+						<div class="@offset">
+							<div class="@containerClass @contcolor">
+								@if (message.Sender != null)
+								{
+									if(userId == message.UserId)
+									{
+										<input type="image" src="~/img/remove.png" class="remove-button" alt="X" onclick="removeMessage(@message.Id)"/>
+									}
+									<p class="sender @textAlign">@message.Sender.FirstName @message.Sender.LastName</p>
+								}
+								<p class="@textAlign">@message.Text</p>
+								<span class="@timePosition" id="sendtime">@message.SendTime.ToString()</span>
+							</div>
+						</div>
+					</div>
+				}
+			}
+		</div>
+		<div class="col-md-12">
+			<form asp-action="Create"
+				  data-ajax-begin="clearInputField" data-ajax-complete=""
+				  data-ajax-failure="alert('Fail')" data-ajax-success="sendMessage"
+				  data-ajax="true" data-ajax-method="POST">
+
+				<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+				<div class="form-group">
+					<input name="Text" class="form-control" id="messageText" />
+				</div>
+
+				<div class="form-group">
+					<input type="submit" value="Send" id="submitButton" class="btn btn-primary btn-block" />
+				</div>
+
+				<input type="hidden" value="@userName" name="username" id="user" />
+				<input type="hidden" value="@fullName" name="fullname" id="fullname" />
+			</form>
+		</div>
+	</div>
+</div>
+
+
+@if (User.Identity.IsAuthenticated)
+{
+	<script type="text/javascript">
+		var userName = @ViewBag.CurrentUserName;
+	</script>
+}
+
+@section scripts {
+	<script src="~/signalr/signalr.min.js"></script>
+	<script src="~/lib/jquery/dist/jquery.unobtrusive-ajax.min.js"></script>
+	<script src="~/js/chat.js"></script>
+	<script src="~/js/signrReqHandler.js"></script>
+}
